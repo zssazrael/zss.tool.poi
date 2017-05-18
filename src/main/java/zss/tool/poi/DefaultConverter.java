@@ -1,5 +1,7 @@
 package zss.tool.poi;
 
+import java.util.Date;
+
 import org.apache.poi.ss.usermodel.Cell;
 
 import zss.tool.Version;
@@ -19,6 +21,10 @@ public class DefaultConverter implements IConverter {
     public void convert(Cell cell, Object value) {
         if (value instanceof CharSequence) {
             cell.setCellValue(value.toString());
+        } else if (value instanceof Number) {
+            cell.setCellValue(((Number) value).doubleValue());
+        } else if (value instanceof Date) {
+            cell.setCellValue((Date) value);
         }
     }
 }

@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -45,18 +46,22 @@ public class SheetSchema {
         for (CellSchema cellSchema : cellSchemaList) {
             final Cell cell = POITool.defaultCell(row, columnIndex++);
             cellSchema.setStyle(cell);
-            final Method method = methodMap.getMethod(cellSchema.getName());
-            if (method == null) {
-                cellSchema.setValue(cell, null);
+            if (value instanceof Map) {
+                cellSchema.setValue(cell, ((Map<?, ?>) value).get(cellSchema.getName()));
             } else {
-                try {
-                    cellSchema.setValue(cell, method.invoke(value));
-                } catch (IllegalAccessException e) {
+                final Method method = methodMap.getMethod(cellSchema.getName());
+                if (method == null) {
                     cellSchema.setValue(cell, null);
-                } catch (IllegalArgumentException e) {
-                    cellSchema.setValue(cell, null);
-                } catch (InvocationTargetException e) {
-                    cellSchema.setValue(cell, null);
+                } else {
+                    try {
+                        cellSchema.setValue(cell, method.invoke(value));
+                    } catch (IllegalAccessException e) {
+                        cellSchema.setValue(cell, null);
+                    } catch (IllegalArgumentException e) {
+                        cellSchema.setValue(cell, null);
+                    } catch (InvocationTargetException e) {
+                        cellSchema.setValue(cell, null);
+                    }
                 }
             }
         }
