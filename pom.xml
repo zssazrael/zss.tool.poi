@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>zss</groupId>
     <artifactId>tool.poi</artifactId>
-    <version>2017.05.09-SNAPSHOT</version>
+    <version>2017.05.09</version>
     <packaging>jar</packaging>
     <build>
         <plugins>
