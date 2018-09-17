@@ -13,7 +13,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 
 import zss.tool.Version;
 
-@Version("2017.05.11")
+@Version("2018.01.04")
 public class SheetSchema {
     private final Sheet sheet;
     private final List<CellSchema> cellSchemaList = new LinkedList<>();
@@ -39,29 +39,40 @@ public class SheetSchema {
         this.sheet = sheet;
     }
 
-    public void fill(final Object value) {
+    public void fill(final Map<?, ?> value) {
         final Row row = POITool.defaultRow(sheet, rowNumber++);
         methodMap.setType(value.getClass());
         int columnIndex = 0;
         for (CellSchema cellSchema : cellSchemaList) {
             final Cell cell = POITool.defaultCell(row, columnIndex++);
             cellSchema.setStyle(cell);
-            if (value instanceof Map) {
-                cellSchema.setValue(cell, ((Map<?, ?>) value).get(cellSchema.getName()));
+            cellSchema.setValue(cell, value.get(cellSchema.getName()));
+        }
+    }
+
+    public void fill(final Object value) {
+        if (value instanceof Map) {
+            fill((Map<?, ?>) value);
+            return;
+        }
+        final Row row = POITool.defaultRow(sheet, rowNumber++);
+        methodMap.setType(value.getClass());
+        int columnIndex = 0;
+        for (CellSchema cellSchema : cellSchemaList) {
+            final Cell cell = POITool.defaultCell(row, columnIndex++);
+            cellSchema.setStyle(cell);
+            final Method method = methodMap.getMethod(cellSchema.getName());
+            if (method == null) {
+                cellSchema.setValue(cell, null);
             } else {
-                final Method method = methodMap.getMethod(cellSchema.getName());
-                if (method == null) {
+                try {
+                    cellSchema.setValue(cell, method.invoke(value));
+                } catch (IllegalAccessException e) {
                     cellSchema.setValue(cell, null);
-                } else {
-                    try {
-                        cellSchema.setValue(cell, method.invoke(value));
-                    } catch (IllegalAccessException e) {
-                        cellSchema.setValue(cell, null);
-                    } catch (IllegalArgumentException e) {
-                        cellSchema.setValue(cell, null);
-                    } catch (InvocationTargetException e) {
-                        cellSchema.setValue(cell, null);
-                    }
+                } catch (IllegalArgumentException e) {
+                    cellSchema.setValue(cell, null);
+                } catch (InvocationTargetException e) {
+                    cellSchema.setValue(cell, null);
                 }
             }
         }
